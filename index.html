@@ -2,14 +2,15 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文本与可缩放图片浏览</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>滚动与缩放的图片浏览</title>
     <style>
         body, html {
             margin: 0;
+            padding: 0;
             height: 100%;
             overflow: hidden;
-            font-family: Arial, sans-serif;
+            width: 100vw;
         }
 
         .split {
@@ -21,94 +22,38 @@
         .top, .bottom {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-        }
-
-        .text-content {
-            white-space: pre-wrap; /* 保留换行 */
-            font-size: 16px;
-            line-height: 1.6;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
+            width: 100%;
+            touch-action: pan-y pinch-zoom; /* 允许捏合缩放 */
         }
 
         .image-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            touch-action: none;
+            padding: 0;
+            margin: 0;
         }
 
         .image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            max-width: none;
-            transform-origin: 0 0;
+            width: 100vw;
+            display: block;
             transition: transform 0.1s ease-out;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="split">
-        <!-- 上半部分显示文本 -->
+        <!-- 上半部分显示图片 -->
         <div class="top" id="top">
-            <div class="text-content">
-砰砰砰！喀锵！
-
-手枪发出子弹用尽的声音后，亚莉亚弯下身体，开始换弹匣。
-
-“——打倒它们了吗？”
-
-“我只是把它们赶到射程外而已。现在它们躲在树后面……待会儿肯定会再跑出来。”
-
-“坚强的孩子。你做到这样已经算很了不起了。”
-
-“……嗄？”
-
-我的语气突然变得很酷，亚莉亚听到不禁皱眉。
-
-啊啊，我又开始了吗？
-
-她的犹豫只维持了一瞬间。
-
-我一手穿过亚莉亚的细腿，另一支手绕过她娇小的后背，将她整个人抱在怀里后，猛然起身。
-
-“哇！”
-
-“我要奖励你，让你稍微当一下公主吧。”
-
-这突如其来的公主抱，让亚莉亚吓傻了眼。
-
-她张大的嘴中露出像猫科动物一样的犬齿，满脸通红。
-
-我抱着亚莉亚，脚踩在跳箱的边缘，一口气跳到仓库的边端。
-
-接着把亚莉亚放在堆积的体育垫子上。
-
-让她像人偶一样坐着。
-
-“什、什什、什么……！”
-
-我敏捷的动作，跟刚才简直像是换了一个人似的，亚莉亚不停眨动双眼。
-
-“公主就坐在这里好好休息吧。开枪这种事情，交给我就行了吧？”
-
-啊啊，我啊。
-
-我似乎已经无法停止自己了。
-
-“你……你……你怎么了？头壳坏掉了吗？”
-
-心慌意乱的娃娃声，被一阵枪声盖过。
-
-铿铿铿铿铿！
+            <div class="image-container" id="image-container-top">
+                <!-- 动态生成上半部分的图片 -->
             </div>
         </div>
 
-        <!-- 下半部分显示可缩放、可拖动的图片 -->
+        <!-- 下半部分显示图片 -->
         <div class="bottom" id="bottom">
-            <div class="image-container" id="image-container">
-                <img src="b.jpg" alt="Image B" class="image" id="image">
+            <div class="image-container" id="image-container-bottom">
+                <!-- 动态生成下半部分的图片 -->
             </div>
         </div>
     </div>
@@ -117,68 +62,54 @@
         // 恢复滚动位置
         window.onload = function() {
             document.getElementById('top').scrollTop = localStorage.getItem('topScroll') || 0;
-            restoreImageState();
+            document.getElementById('bottom').scrollTop = localStorage.getItem('bottomScroll') || 0;
         };
 
         // 保存滚动位置
         document.getElementById('top').onscroll = function() {
             localStorage.setItem('topScroll', this.scrollTop);
         };
+        document.getElementById('bottom').onscroll = function() {
+            localStorage.setItem('bottomScroll', this.scrollTop);
+        };
 
-        // 缩放和拖移的实现
-        let image = document.getElementById('image');
-        let container = document.getElementById('image-container');
-        let scale = parseFloat(localStorage.getItem('imageScale')) || 1;
-        let translateX = parseFloat(localStorage.getItem('imageTranslateX')) || 0;
-        let translateY = parseFloat(localStorage.getItem('imageTranslateY')) || 0;
-        let initialDistance = 0;
-        let initialScale = scale;
-        let lastTouchX = 0, lastTouchY = 0;
-
-        function restoreImageState() {
-            // 恢复图片的缩放和拖移状态
-            image.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        // 动态生成上半部分图片列表
+        const imageContainerTop = document.getElementById('image-container-top');
+        for (let i = 131; i <= 132; i++) {
+            const img = document.createElement('img');
+            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
+            img.alt = `Image ${i}`;
+            img.className = 'image';
+            imageContainerTop.appendChild(img);
         }
 
-        container.addEventListener('touchstart', function (e) {
-            if (e.touches.length === 1) {
-                lastTouchX = e.touches[0].clientX;
-                lastTouchY = e.touches[0].clientY;
-            } else if (e.touches.length === 2) {
-                initialDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                initialScale = scale;
-            }
+        // 动态生成下半部分图片列表
+        const imageContainerBottom = document.getElementById('image-container-bottom');
+        for (let i = 131; i <= 132; i++) {
+            const img = document.createElement('img');
+            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
+            img.alt = `Image ${i}`;
+            img.className = 'image';
+            imageContainerBottom.appendChild(img);
+        }
+
+        // 处理捏合缩放
+        const pinchHandler = (e) => {
+            e.preventDefault(); // 阻止默认的缩放行为
+            const scale = e.scale; // 获取缩放比例
+            document.body.style.transform = `scale(${scale})`; // 应用缩放
+            document.body.style.transformOrigin = '0 0'; // 设置缩放原点
+        };
+
+        // 监听触摸事件
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault(); // 阻止默认的缩放行为
         });
 
-        container.addEventListener('touchmove', function (e) {
-            if (e.touches.length === 1) {
-                // 单指拖动
-                let dx = e.touches[0].clientX - lastTouchX;
-                let dy = e.touches[0].clientY - lastTouchY;
-                translateX += dx;
-                translateY += dy;
-                lastTouchX = e.touches[0].clientX;
-                lastTouchY = e.touches[0].clientY;
-                image.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-            } else if (e.touches.length === 2) {
-                // 双指缩放
-                let newDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                scale = initialScale * (newDistance / initialDistance);
-                image.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-            }
-        });
-
-        container.addEventListener('touchend', function () {
-            // 保存图片的缩放和拖移状态
-            localStorage.setItem('imageScale', scale);
-            localStorage.setItem('imageTranslateX', translateX);
-            localStorage.setItem('imageTranslateY', translateY);
+        document.addEventListener('gesturechange', pinchHandler);
+        document.addEventListener('gestureend', (e) => {
+            e.preventDefault(); // 阻止默认的缩放行为
+            document.body.style.transform = ''; // 重置缩放
         });
     </script>
 </body>
