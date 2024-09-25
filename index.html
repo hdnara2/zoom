@@ -79,6 +79,8 @@
         // 双指缩放功能
         function enablePinchZoom(element) {
             let scale = 1;
+            const maxScale = 3; // 最大缩放比例
+            const minScale = 1; // 最小缩放比例
             let startDistance = null;
 
             element.addEventListener('gesturestart', function(e) {
@@ -89,6 +91,14 @@
             element.addEventListener('gesturechange', function(e) {
                 e.preventDefault();
                 scale *= e.scale / startDistance;
+
+                // 限制缩放比例
+                if (scale > maxScale) {
+                    scale = maxScale;
+                } else if (scale < minScale) {
+                    scale = minScale;
+                }
+
                 element.style.transform = `scale(${scale})`;
                 startDistance = e.scale;
             });
@@ -106,7 +116,7 @@
         const imageContainerTop = document.getElementById('image-container-top');
         for (let i = 131; i <= 133; i++) {
             const img = document.createElement('img');
-            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
+            img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
             img.alt = `Image ${i}`;
             img.className = 'image';
             imageContainerTop.appendChild(img);
