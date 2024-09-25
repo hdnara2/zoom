@@ -25,28 +25,24 @@
             -webkit-overflow-scrolling: touch;
             padding: 0;
             width: 100%;
-            touch-action: pan-y; /* 允许纵向拖动 */
+            position: relative; /* 使缩放生效 */
+            touch-action: pan-y; /* 只允许纵向拖动 */
         }
 
         .image-container {
             padding: 0;
             margin: 0;
-            position: relative;
+            display: flex;
+            flex-direction: column; /* 纵向排列图片 */
+            align-items: center; /* 水平居中对齐 */
+            transform-origin: center; /* 缩放中心设置 */
         }
 
         .image {
-            width: 100vw;
+            width: 100vw; /* 设置为100vw以消除左右留白 */
             display: block;
             transition: transform 0.1s ease-out;
-            margin: 0;
-        }
-
-        .image-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            touch-action: pinch-zoom; /* 允许捏合缩放 */
+            margin: 0; /* 去掉图片底部的间隔 */
         }
     </style>
 </head>
@@ -54,14 +50,14 @@
     <div class="split">
         <!-- 上半部分显示图片 -->
         <div class="top" id="top">
-            <div class="image-container" id="image-container-top">
+            <div class="image-container" id="image-container-top" style="transform: scale(1);">
                 <!-- 动态生成上半部分的图片 -->
             </div>
         </div>
 
         <!-- 下半部分显示图片 -->
         <div class="bottom" id="bottom">
-            <div class="image-container" id="image-container-bottom">
+            <div class="image-container" id="image-container-bottom" style="transform: scale(1);">
                 <!-- 动态生成下半部分的图片 -->
             </div>
         </div>
@@ -72,13 +68,11 @@
         window.onload = function() {
             document.getElementById('top').scrollTop = localStorage.getItem('topScroll') || 0;
             document.getElementById('bottom').scrollTop = localStorage.getItem('bottomScroll') || 0;
-            const topScale = localStorage.getItem('topScale') || 1;
-            const bottomScale = localStorage.getItem('bottomScale') || 1;
-            document.getElementById('image-container-top').style.transform = `scale(${topScale})`;
-            document.getElementById('image-container-bottom').style.transform = `scale(${bottomScale})`;
+            document.getElementById('image-container-top').style.transform = `scale(${localStorage.getItem('topScale') || 1})`;
+            document.getElementById('image-container-bottom').style.transform = `scale(${localStorage.getItem('bottomScale') || 1})`;
         };
 
-        // 保存滚动位置
+        // 保存滚动位置和缩放比例
         document.getElementById('top').onscroll = function() {
             localStorage.setItem('topScroll', this.scrollTop);
         };
@@ -86,53 +80,58 @@
             localStorage.setItem('bottomScroll', this.scrollTop);
         };
 
-        // 图片缩放
-        const scaleImage = (container, scaleKey) => {
-            let scale = 1;
-            const imageContainer = document.getElementById(container);
-            imageContainer.addEventListener('gesturestart', (e) => {
-                e.preventDefault();
-            });
-            imageContainer.addEventListener('gesturechange', (e) => {
-                e.preventDefault();
-                scale *= e.scale;
-                imageContainer.style.transform = `scale(${scale})`;
-            });
-            imageContainer.addEventListener('gestureend', (e) => {
-                e.preventDefault();
-                localStorage.setItem(scaleKey, scale);
-            });
-        };
-
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
-        for (let i = 131; i <= 150; i++) {
-            const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'image-wrapper';
+        for (let i = 1; i <= 150; i++) {
             const img = document.createElement('img');
             img.src = `IMG_${String(i).padStart(4, '0')}.png`;
             img.alt = `Image ${i}`;
             img.className = 'image';
-            imgWrapper.appendChild(img);
-            imageContainerTop.appendChild(imgWrapper);
+            imageContainerTop.appendChild(img);
         }
 
         // 动态生成下半部分图片列表
         const imageContainerBottom = document.getElementById('image-container-bottom');
-        for (let i = 131; i <= 200; i++) {
-            const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'image-wrapper';
+        for (let i = 151; i <= 200; i++) {
             const img = document.createElement('img');
             img.src = `IMG_${String(i).padStart(4, '0')}.png`;
             img.alt = `Image ${i}`;
             img.className = 'image';
-            imgWrapper.appendChild(img);
-            imageContainerBottom.appendChild(imgWrapper);
+            imageContainerBottom.appendChild(img);
         }
 
-        // 初始化缩放功能
-        scaleImage('image-container-top', 'topScale');
-        scaleImage('image-container-bottom', 'bottomScale');
+        // 双指缩放功能
+        let currentScaleTop = 1;
+        let currentScaleBottom = 1;
+
+        const enablePinchZoom = (container, index) => {
+            let initialDistance = null;
+
+            container.addEventListener('gesturestart', (event) => {
+                initialDistance = event.scale;
+                event.preventDefault(); // 禁止默认行为
+            });
+
+            container.addEventListener('gesturechange', (event) => {
+                const scale = initialDistance * event.scale;
+                container.style.transform = `scale(${scale})`;
+                if (index === 0) {
+                    currentScaleTop = scale;
+                    localStorage.setItem('topScale', currentScaleTop);
+                } else {
+                    currentScaleBottom = scale;
+                    localStorage.setItem('bottomScale', currentScaleBottom);
+                }
+                event.preventDefault(); // 禁止默认行为
+            });
+
+            container.addEventListener('gestureend', (event) => {
+                event.preventDefault(); // 禁止默认行为
+            });
+        };
+
+        enablePinchZoom(document.getElementById('image-container-top'), 0);
+        enablePinchZoom(document.getElementById('image-container-bottom'), 1);
     </script>
 </body>
 </html>
