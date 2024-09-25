@@ -104,6 +104,17 @@
                 // 设置缩放并存储比例
                 element.style.transform = `scale(${scale})`;
                 localStorage.setItem(key, scale);
+                
+                // 控制下半部分的可见性
+                if (key === 'bottomScale' && scale > 1) {
+                    const bottomContainer = document.getElementById('bottom');
+                    bottomContainer.style.overflowY = 'hidden';
+                    bottomContainer.style.marginTop = `-${(scale - 1) * 50}vh`; // 根据缩放比例调整上边距
+                } else {
+                    document.getElementById('bottom').style.overflowY = 'auto';
+                    document.getElementById('bottom').style.marginTop = '0';
+                }
+
                 startDistance = e.scale;
             });
 
