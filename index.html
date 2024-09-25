@@ -62,10 +62,12 @@
     </div>
 
     <script>
-        // 恢复滚动位置
+        // 恢复滚动位置和缩放比例
         window.onload = function() {
             document.getElementById('top').scrollTop = localStorage.getItem('topScroll') || 0;
             document.getElementById('bottom').scrollTop = localStorage.getItem('bottomScroll') || 0;
+            document.getElementById('top').style.transform = `scale(${localStorage.getItem('topScale') || 1})`;
+            document.getElementById('bottom').style.transform = `scale(${localStorage.getItem('bottomScale') || 1})`;
         };
 
         // 保存滚动位置
@@ -77,7 +79,7 @@
         };
 
         // 双指缩放功能
-        function enablePinchZoom(element) {
+        function enablePinchZoom(element, key) {
             let scale = 1;
             const maxScale = 3; // 最大缩放比例
             const minScale = 1; // 最小缩放比例
@@ -99,7 +101,9 @@
                     scale = minScale;
                 }
 
+                // 设置缩放并存储比例
                 element.style.transform = `scale(${scale})`;
+                localStorage.setItem(key, scale);
                 startDistance = e.scale;
             });
 
@@ -109,12 +113,12 @@
         }
 
         // 启用上半部分和下半部分的双指缩放
-        enablePinchZoom(document.getElementById('top'));
-        enablePinchZoom(document.getElementById('bottom'));
+        enablePinchZoom(document.getElementById('top'), 'topScale');
+        enablePinchZoom(document.getElementById('bottom'), 'bottomScale');
 
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
-        for (let i = 131; i <= 133; i++) {
+        for (let i = 131; i <= 150; i++) {
             const img = document.createElement('img');
             img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
             img.alt = `Image ${i}`;
@@ -124,7 +128,7 @@
 
         // 动态生成下半部分图片列表
         const imageContainerBottom = document.getElementById('image-container-bottom');
-        for (let i = 131; i <= 132; i++) {
+        for (let i = 131; i <= 200; i++) {
             const img = document.createElement('img');
             img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
             img.alt = `Image ${i}`;
