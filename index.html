@@ -135,9 +135,9 @@
 
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
-        for (let i = 1; i <= 150; i++) {
+        for (let i = 131; i <= 150; i++) {
             const img = document.createElement('img');
-            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
+            img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
             img.alt = `Image ${i}`;
             img.className = 'image';
             imageContainerTop.appendChild(img);
@@ -145,9 +145,9 @@
 
         // 动态生成下半部分图片列表
         const imageContainerBottom = document.getElementById('image-container-bottom');
-        for (let i = 151; i <= 200; i++) {
+        for (let i = 131; i <= 200; i++) {
             const img = document.createElement('img');
-            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
+            img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
             img.alt = `Image ${i}`;
             img.className = 'image';
             imageContainerBottom.appendChild(img);
