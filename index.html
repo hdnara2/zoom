@@ -26,6 +26,8 @@
             padding: 0;
             width: 100%;
             touch-action: pan-y; /* 允许纵向滑动 */
+            position: relative; /* 为了限制放大 */
+            z-index: 1; /* 确保层级 */
         }
 
         .image-container {
@@ -79,9 +81,9 @@
         };
 
         // 双指缩放功能
-        function enablePinchZoom(element, key) {
+        function enablePinchZoom(element, key, otherElement) {
             let scale = 1;
-            const maxScale = 3; // 最大缩放比例
+            const maxScale = 2; // 最大缩放比例
             const minScale = 1; // 最小缩放比例
             let startDistance = null;
 
@@ -101,6 +103,15 @@
                     scale = minScale;
                 }
 
+                // 确保下半框不会遮挡上半框
+                if (element === document.getElementById('bottom') && scale > 1) {
+                    const windowHeight = window.innerHeight;
+                    const topHeight = document.getElementById('top').getBoundingClientRect().height;
+                    if (topHeight * scale > windowHeight) {
+                        scale = windowHeight / topHeight; // 限制放大
+                    }
+                }
+
                 // 设置缩放并存储比例
                 element.style.transform = `scale(${scale})`;
                 localStorage.setItem(key, scale);
@@ -113,14 +124,14 @@
         }
 
         // 启用上半部分和下半部分的双指缩放
-        enablePinchZoom(document.getElementById('top'), 'topScale');
-        enablePinchZoom(document.getElementById('bottom'), 'bottomScale');
+        enablePinchZoom(document.getElementById('top'), 'topScale', document.getElementById('bottom'));
+        enablePinchZoom(document.getElementById('bottom'), 'bottomScale', document.getElementById('top'));
 
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
-        for (let i = 131; i <= 150; i++) {
+        for (let i = 1; i <= 150; i++) {
             const img = document.createElement('img');
-            img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
+            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
             img.alt = `Image ${i}`;
             img.className = 'image';
             imageContainerTop.appendChild(img);
@@ -128,9 +139,9 @@
 
         // 动态生成下半部分图片列表
         const imageContainerBottom = document.getElementById('image-container-bottom');
-        for (let i = 131; i <= 200; i++) {
+        for (let i = 151; i <= 200; i++) {
             const img = document.createElement('img');
-            img.src = `IMG_${String(i).padStart(4, '0')}.PNG`;
+            img.src = `IMG_${String(i).padStart(4, '0')}.png`;
             img.alt = `Image ${i}`;
             img.className = 'image';
             imageContainerBottom.appendChild(img);
