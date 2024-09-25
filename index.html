@@ -25,21 +25,23 @@
             -webkit-overflow-scrolling: touch;
             padding: 0;
             width: 100%;
-            position: relative;
+            position: relative; /* 允许绝对定位 */
         }
 
         .image-container {
             padding: 0;
             margin: 0;
-            width: 100vw; /* 确保宽度适应屏幕 */
+            display: flex;
+            justify-content: center; /* 中心对齐图片 */
+            align-items: center; /* 中心对齐图片 */
         }
 
         .image {
-            width: 100%; /* 设置为100%以消除左右留白 */
+            width: 100vw;
             display: block;
             transition: transform 0.1s ease-out;
             margin: 0;
-            touch-action: pinch-zoom;
+            touch-action: none; /* 禁用默认的触摸动作 */
         }
     </style>
 </head>
@@ -61,77 +63,82 @@
     </div>
 
     <script>
-        // 恢复滚动位置和缩放比例
+        const topContainer = document.getElementById('top');
+        const bottomContainer = document.getElementById('bottom');
+
+        // 恢复滚动位置
         window.onload = function() {
-            document.getElementById('top').scrollTop = localStorage.getItem('topScroll') || 0;
-            document.getElementById('bottom').scrollTop = localStorage.getItem('bottomScroll') || 0;
-            const topScale = localStorage.getItem('topScale') || 1;
-            const bottomScale = localStorage.getItem('bottomScale') || 1;
-            setScale(document.getElementById('image-container-top'), topScale);
-            setScale(document.getElementById('image-container-bottom'), bottomScale);
+            topContainer.scrollTop = localStorage.getItem('topScroll') || 0;
+            bottomContainer.scrollTop = localStorage.getItem('bottomScroll') || 0;
+
+            // 恢复缩放比例
+            const scaleTop = localStorage.getItem('topScale') || 1;
+            const scaleBottom = localStorage.getItem('bottomScale') || 1;
+            document.querySelectorAll('#image-container-top .image').forEach(img => {
+                img.style.transform = `scale(${scaleTop})`;
+            });
+            document.querySelectorAll('#image-container-bottom .image').forEach(img => {
+                img.style.transform = `scale(${scaleBottom})`;
+            });
         };
 
-        // 保存滚动位置和缩放比例
-        document.getElementById('top').onscroll = function() {
+        // 保存滚动位置
+        topContainer.onscroll = function() {
             localStorage.setItem('topScroll', this.scrollTop);
         };
-        document.getElementById('bottom').onscroll = function() {
+        bottomContainer.onscroll = function() {
             localStorage.setItem('bottomScroll', this.scrollTop);
         };
 
-        function setScale(container, scale) {
-            container.style.transform = `scale(${scale})`;
-            container.style.transformOrigin = 'top left';
+        // 存储缩放比例
+        function saveScale() {
+            const scaleTop = document.querySelector('#image-container-top .image').style.transform.match(/scale\(([^)]+)\)/)[1];
+            const scaleBottom = document.querySelector('#image-container-bottom .image').style.transform.match(/scale\(([^)]+)\)/)[1];
+            localStorage.setItem('topScale', scaleTop);
+            localStorage.setItem('bottomScale', scaleBottom);
         }
 
-        let currentTopScale = 1;
-        let currentBottomScale = 1;
-
-        // 添加捏合缩放功能
-        function handlePinchZoom(container, isTop) {
-            let initialDistance = null;
-
-            container.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 2) {
-                    initialDistance = getDistance(e.touches);
-                    e.preventDefault();
-                }
+        // 处理缩放手势
+        function handlePinch(container, scaleFactor) {
+            const images = container.querySelectorAll('.image');
+            images.forEach(img => {
+                img.style.transform = `scale(${scaleFactor})`;
             });
-
-            container.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2 && initialDistance) {
-                    const currentDistance = getDistance(e.touches);
-                    const scaleChange = currentDistance / initialDistance;
-
-                    if (isTop) {
-                        currentTopScale *= scaleChange;
-                        setScale(container, currentTopScale);
-                        localStorage.setItem('topScale', currentTopScale);
-                    } else {
-                        currentBottomScale *= scaleChange;
-                        setScale(container, currentBottomScale);
-                        localStorage.setItem('bottomScale', currentBottomScale);
-                    }
-
-                    initialDistance = currentDistance; // 更新初始距离
-                    e.preventDefault();
-                }
-            });
-
-            container.addEventListener('touchend', () => {
-                initialDistance = null;
-            });
+            saveScale(); // 保存缩放比例
         }
 
-        function getDistance(touches) {
-            const dx = touches[0].clientX - touches[1].clientX;
-            const dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
+        // 添加触控事件
+        let startDistance = 0;
+        let currentScaleTop = 1;
+        let currentScaleBottom = 1;
 
-        // 初始化捏合缩放
-        handlePinchZoom(document.getElementById('image-container-top'), true);
-        handlePinchZoom(document.getElementById('image-container-bottom'), false);
+        topContainer.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                startDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            }
+        });
+
+        topContainer.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                const distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                const scaleFactor = (distance / startDistance) * currentScaleTop;
+                handlePinch(topContainer, scaleFactor);
+            }
+        });
+
+        bottomContainer.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                startDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            }
+        });
+
+        bottomContainer.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                const distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                const scaleFactor = (distance / startDistance) * currentScaleBottom;
+                handlePinch(bottomContainer, scaleFactor);
+            }
+        });
 
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
