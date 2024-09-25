@@ -25,17 +25,15 @@
             -webkit-overflow-scrolling: touch;
             padding: 0;
             width: 100%;
-            position: relative; /* 使缩放生效 */
-            touch-action: pan-y; /* 只允许纵向拖动 */
+            touch-action: pan-y; /* 允许纵向滑动 */
         }
 
         .image-container {
-            padding: 0;
-            margin: 0;
+            padding: 0; /* 去掉内边距 */
+            margin: 0; /* 去掉外边距 */
             display: flex;
-            flex-direction: column; /* 纵向排列图片 */
-            align-items: center; /* 水平居中对齐 */
-            transform-origin: center; /* 缩放中心设置 */
+            flex-direction: column;
+            align-items: center;
         }
 
         .image {
@@ -50,14 +48,14 @@
     <div class="split">
         <!-- 上半部分显示图片 -->
         <div class="top" id="top">
-            <div class="image-container" id="image-container-top" style="transform: scale(1);">
+            <div class="image-container" id="image-container-top">
                 <!-- 动态生成上半部分的图片 -->
             </div>
         </div>
 
         <!-- 下半部分显示图片 -->
         <div class="bottom" id="bottom">
-            <div class="image-container" id="image-container-bottom" style="transform: scale(1);">
+            <div class="image-container" id="image-container-bottom">
                 <!-- 动态生成下半部分的图片 -->
             </div>
         </div>
@@ -68,17 +66,55 @@
         window.onload = function() {
             document.getElementById('top').scrollTop = localStorage.getItem('topScroll') || 0;
             document.getElementById('bottom').scrollTop = localStorage.getItem('bottomScroll') || 0;
-            document.getElementById('image-container-top').style.transform = `scale(${localStorage.getItem('topScale') || 1})`;
-            document.getElementById('image-container-bottom').style.transform = `scale(${localStorage.getItem('bottomScale') || 1})`;
+            document.getElementById('top').style.transform = `scale(${localStorage.getItem('topScale') || 1})`;
+            document.getElementById('bottom').style.transform = `scale(${localStorage.getItem('bottomScale') || 1})`;
         };
 
-        // 保存滚动位置和缩放比例
+        // 保存滚动位置
         document.getElementById('top').onscroll = function() {
             localStorage.setItem('topScroll', this.scrollTop);
         };
         document.getElementById('bottom').onscroll = function() {
             localStorage.setItem('bottomScroll', this.scrollTop);
         };
+
+        // 双指缩放功能
+        function enablePinchZoom(element, key) {
+            let scale = 1;
+            const maxScale = 3; // 最大缩放比例
+            const minScale = 1; // 最小缩放比例
+            let startDistance = null;
+
+            element.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+                startDistance = e.scale;
+            });
+
+            element.addEventListener('gesturechange', function(e) {
+                e.preventDefault();
+                scale *= e.scale / startDistance;
+
+                // 限制缩放比例
+                if (scale > maxScale) {
+                    scale = maxScale;
+                } else if (scale < minScale) {
+                    scale = minScale;
+                }
+
+                // 设置缩放并存储比例
+                element.style.transform = `scale(${scale})`;
+                localStorage.setItem(key, scale);
+                startDistance = e.scale;
+            });
+
+            element.addEventListener('gestureend', function(e) {
+                e.preventDefault();
+            });
+        }
+
+        // 启用上半部分和下半部分的双指缩放
+        enablePinchZoom(document.getElementById('top'), 'topScale');
+        enablePinchZoom(document.getElementById('bottom'), 'bottomScale');
 
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
@@ -99,39 +135,6 @@
             img.className = 'image';
             imageContainerBottom.appendChild(img);
         }
-
-        // 双指缩放功能
-        let currentScaleTop = 1;
-        let currentScaleBottom = 1;
-
-        const enablePinchZoom = (container, index) => {
-            let initialDistance = null;
-
-            container.addEventListener('gesturestart', (event) => {
-                initialDistance = event.scale;
-                event.preventDefault(); // 禁止默认行为
-            });
-
-            container.addEventListener('gesturechange', (event) => {
-                const scale = initialDistance * event.scale;
-                container.style.transform = `scale(${scale})`;
-                if (index === 0) {
-                    currentScaleTop = scale;
-                    localStorage.setItem('topScale', currentScaleTop);
-                } else {
-                    currentScaleBottom = scale;
-                    localStorage.setItem('bottomScale', currentScaleBottom);
-                }
-                event.preventDefault(); // 禁止默认行为
-            });
-
-            container.addEventListener('gestureend', (event) => {
-                event.preventDefault(); // 禁止默认行为
-            });
-        };
-
-        enablePinchZoom(document.getElementById('image-container-top'), 0);
-        enablePinchZoom(document.getElementById('image-container-bottom'), 1);
     </script>
 </body>
 </html>
