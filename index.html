@@ -25,19 +25,18 @@
             -webkit-overflow-scrolling: touch;
             padding: 0;
             width: 100%;
-            touch-action: pan-y pinch-zoom; /* 允许捏合缩放 */
         }
 
         .image-container {
-            padding: 0;
-            margin: 0;
+            padding: 0; /* 去掉内边距 */
+            margin: 0; /* 去掉外边距 */
         }
 
         .image {
-            width: 100vw;
+            width: 100vw; /* 设置为100vw以消除左右留白 */
             display: block;
             transition: transform 0.1s ease-out;
-            margin: 0;
+            margin: 0; /* 去掉图片底部的间隔 */
         }
     </style>
 </head>
@@ -75,7 +74,7 @@
 
         // 动态生成上半部分图片列表
         const imageContainerTop = document.getElementById('image-container-top');
-        for (let i = 131; i <= 132; i++) {
+        for (let i = 131; i <= 133; i++) {
             const img = document.createElement('img');
             img.src = `IMG_${String(i).padStart(4, '0')}.png`;
             img.alt = `Image ${i}`;
@@ -92,25 +91,6 @@
             img.className = 'image';
             imageContainerBottom.appendChild(img);
         }
-
-        // 处理捏合缩放
-        const pinchHandler = (e) => {
-            e.preventDefault(); // 阻止默认的缩放行为
-            const scale = e.scale; // 获取缩放比例
-            document.body.style.transform = `scale(${scale})`; // 应用缩放
-            document.body.style.transformOrigin = '0 0'; // 设置缩放原点
-        };
-
-        // 监听触摸事件
-        document.addEventListener('gesturestart', (e) => {
-            e.preventDefault(); // 阻止默认的缩放行为
-        });
-
-        document.addEventListener('gesturechange', pinchHandler);
-        document.addEventListener('gestureend', (e) => {
-            e.preventDefault(); // 阻止默认的缩放行为
-            document.body.style.transform = ''; // 重置缩放
-        });
     </script>
 </body>
 </html>
